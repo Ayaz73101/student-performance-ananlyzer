@@ -1,6 +1,9 @@
-import streamlit as st
-import pandas as pd
+import sklearn
 import joblib
+import streamlit as st
+
+st.write("Scikit-learn version:", sklearn.__version__)
+st.write("Joblib version:", joblib.__version__)
 
 
 # =========================================================
