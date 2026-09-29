@@ -1,9 +1,7 @@
-import sklearn
+import os
 import joblib
+import pandas as pd
 import streamlit as st
-
-st.write("Scikit-learn version:", sklearn.__version__)
-st.write("Joblib version:", joblib.__version__)
 
 
 # =========================================================
@@ -78,17 +76,57 @@ div.stButton > button {
 
 
 # =========================================================
+# MODEL PATHS
+# =========================================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "model",
+    "student_performance_model.pkl"
+)
+
+CONFIG_PATH = os.path.join(
+    BASE_DIR,
+    "model",
+    "model_config.pkl"
+)
+
+
+# =========================================================
 # LOAD MODEL
 # =========================================================
 
-MODEL_PATH = "model/student_performance_model.pkl"
-
 try:
+
     model = joblib.load(MODEL_PATH)
+
 except Exception as e:
+
     st.error("❌ Unable to load the machine learning model.")
+
+    st.write("Model path:")
+    st.code(MODEL_PATH)
+
     st.exception(e)
+
     st.stop()
+
+
+# =========================================================
+# LOAD MODEL CONFIGURATION
+# =========================================================
+
+model_config = None
+
+if os.path.exists(CONFIG_PATH):
+
+    try:
+        model_config = joblib.load(CONFIG_PATH)
+
+    except Exception:
+        model_config = None
 
 
 # =========================================================
@@ -182,6 +220,7 @@ with tab_home:
     col1, col2, col3 = st.columns(3)
 
     with col1:
+
         st.info(
             "📋\n\n"
             "**Student Analysis**\n\n"
@@ -189,6 +228,7 @@ with tab_home:
         )
 
     with col2:
+
         st.info(
             "🤖\n\n"
             "**Machine Learning**\n\n"
@@ -196,6 +236,7 @@ with tab_home:
         )
 
     with col3:
+
         st.info(
             "📊\n\n"
             "**Performance Insights**\n\n"
@@ -340,37 +381,59 @@ with tab_prediction:
 
             prediction = model.predict(student)[0]
 
-            # Keep prediction between 0 and 100
-            prediction = max(0, min(100, prediction))
+            prediction = max(
+                0,
+                min(100, float(prediction))
+            )
 
             # ---------------------------------------------
             # PERFORMANCE CATEGORY
             # ---------------------------------------------
 
             if prediction >= 90:
+
                 category = "Excellent"
-                message = "Outstanding predicted academic performance."
+
+                message = (
+                    "Outstanding predicted academic performance."
+                )
 
             elif prediction >= 80:
+
                 category = "Very Good"
-                message = "Strong predicted academic performance."
+
+                message = (
+                    "Strong predicted academic performance."
+                )
 
             elif prediction >= 70:
+
                 category = "Good"
-                message = "Good predicted academic performance."
+
+                message = (
+                    "Good predicted academic performance."
+                )
 
             elif prediction >= 60:
+
                 category = "Average"
-                message = "Average predicted academic performance."
+
+                message = (
+                    "Average predicted academic performance."
+                )
 
             elif prediction >= 50:
+
                 category = "Needs Improvement"
+
                 message = (
                     "Additional academic support may be useful."
                 )
 
             else:
+
                 category = "At Risk"
+
                 message = (
                     "The prediction indicates a need for "
                     "additional academic attention."
@@ -383,7 +446,9 @@ with tab_prediction:
             st.markdown("---")
 
             st.markdown(
-                '<div class="section-title">📊 Prediction Result</div>',
+                '<div class="section-title">'
+                '📊 Prediction Result'
+                '</div>',
                 unsafe_allow_html=True
             )
 
@@ -417,16 +482,22 @@ with tab_prediction:
 
             st.write("")
 
-            st.progress(prediction / 100)
+            st.progress(
+                prediction / 100
+            )
 
-            st.info(f"💡 {message}")
+            st.info(
+                f"💡 {message}"
+            )
 
             # =================================================
             # STUDENT PROFILE
             # =================================================
 
             st.markdown(
-                '<div class="section-title">👤 Student Profile</div>',
+                '<div class="section-title">'
+                '👤 Student Profile'
+                '</div>',
                 unsafe_allow_html=True
             )
 
@@ -473,7 +544,9 @@ with tab_prediction:
             # =================================================
 
             st.markdown(
-                '<div class="section-title">📋 Input Summary</div>',
+                '<div class="section-title">'
+                '📋 Input Summary'
+                '</div>',
                 unsafe_allow_html=True
             )
 
@@ -508,8 +581,12 @@ with tab_prediction:
 
             result_data = pd.DataFrame({
                 "Gender": [gender],
-                "Part-Time Job": [part_time_job],
-                "Absence Days": [absence_days],
+                "Part-Time Job": [
+                    part_time_job
+                ],
+                "Absence Days": [
+                    absence_days
+                ],
                 "Extracurricular Activities": [
                     extracurricular_activities
                 ],
@@ -527,7 +604,9 @@ with tab_prediction:
                 ]
             })
 
-            csv = result_data.to_csv(index=False)
+            csv = result_data.to_csv(
+                index=False
+            )
 
             st.download_button(
                 label="📥 Download Prediction Report",
@@ -538,7 +617,10 @@ with tab_prediction:
 
         except Exception as e:
 
-            st.error("❌ Prediction failed.")
+            st.error(
+                "❌ Prediction failed."
+            )
+
             st.exception(e)
 
 
@@ -563,12 +645,23 @@ with tab_analytics:
 
     try:
 
-        preprocessor = model.named_steps["preprocessor"]
-        trained_model = model.named_steps["model"]
+        preprocessor = model.named_steps[
+            "preprocessor"
+        ]
 
-        feature_names = preprocessor.get_feature_names_out()
+        trained_model = model.named_steps[
+            "model"
+        ]
 
-        importance = trained_model.feature_importances_
+        feature_names = (
+            preprocessor
+            .get_feature_names_out()
+        )
+
+        importance = (
+            trained_model
+            .feature_importances_
+        )
 
         feature_importance = pd.DataFrame({
             "Feature": feature_names,
@@ -577,23 +670,35 @@ with tab_analytics:
 
         feature_importance["Feature"] = (
             feature_importance["Feature"]
-            .str.replace("num__", "", regex=False)
-            .str.replace("cat__", "", regex=False)
+            .str.replace(
+                "num__",
+                "",
+                regex=False
+            )
+            .str.replace(
+                "cat__",
+                "",
+                regex=False
+            )
         )
 
-        feature_importance = feature_importance.sort_values(
-            "Importance",
-            ascending=False
+        feature_importance = (
+            feature_importance
+            .sort_values(
+                "Importance",
+                ascending=False
+            )
         )
 
         st.bar_chart(
-            feature_importance.set_index("Feature")[
-                "Importance"
-            ]
+            feature_importance.set_index(
+                "Feature"
+            )["Importance"]
         )
 
         feature_importance["Importance"] = (
-            feature_importance["Importance"].round(4)
+            feature_importance["Importance"]
+            .round(4)
         )
 
         st.dataframe(
@@ -604,7 +709,10 @@ with tab_analytics:
 
     except Exception as e:
 
-        st.error("Unable to calculate feature importance.")
+        st.error(
+            "Unable to calculate feature importance."
+        )
+
         st.exception(e)
 
     # =====================================================
@@ -656,9 +764,9 @@ with tab_analytics:
         )
 
     st.bar_chart(
-        cv_results.set_index("Model")[
-            "Mean CV RMSE"
-        ]
+        cv_results.set_index(
+            "Model"
+        )["Mean CV RMSE"]
     )
 
     st.dataframe(
